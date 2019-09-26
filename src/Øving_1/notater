@@ -1,0 +1,29 @@
+public int[] algoritme(int[] testdata){
+        int verdi = 10; /1
+        int avkastning = 0; //salg-kjøp /1
+        int antallDager = testdata.length; /1 || /n
+        int[] verdier = new int[antallDager];/1
+        int[] kjøpSalg = new int[2]; /1
+
+        for(int i = 0; i < antallDager; i++){ /3n+1
+            verdi += testdata[i]; //1
+            verdier[i] = verdi; //1
+        }
+        verdi = 10;/1
+
+        for(int i = 0; i < antallDager; i++) { /2n+n(5n+1)
+            for (int y = 0; y < antallDager; y++) { //5n+1
+                if((verdier[y] - verdier[i]) > avkastning){ ///2
+                    avkastning = verdier[y] - verdier[i]; ////1
+                    //Plusser på en pga arrayJustering
+                    kjøpSalg[0] = i+1; ////1
+                    kjøpSalg[1] = y+1; ////1
+                }
+            }
+        }
+        return kjøpSalg; /1
+    }
+    Teller summerer antall /x for kompleksitetsfunksjon.
+
+    K(n) = 7+3n+1+2n+n(5n+1) = n(5n+1)+5n+8
+    K(n) = 5n^2 +6n +8
