@@ -8,4 +8,5 @@ public class Edge {
         this.next = next;
         this.to = to;
     }
+
 }

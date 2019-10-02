@@ -10,4 +10,5 @@ public class GraphNode {
     public GraphNode(int nodenr){
         this.nodenr = nodenr;
     }
+
 }
