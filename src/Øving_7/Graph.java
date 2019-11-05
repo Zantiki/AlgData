@@ -20,6 +20,7 @@ public class Graph {
     public GraphNode[] getNodes(){
         return nodes;
     }
+
     public void bfs(GraphNode start){
         initPrevious(start);
         Quene q = new Quene(totNodes -1);
@@ -172,9 +173,10 @@ public class Graph {
         Graph test = new Graph();
         test.readGraphFromURL("http://www.iie.ntnu.no/fag/_alg/uv-graf/L7g1");
         GraphNode[] nodes = test.getNodes();
-        System.out.println("Resultat fra bredde først søk");
+        System.out.println("Resultat fra bredde først søk av L7g1");
         System.out.println(test.bfsResult(nodes[5]));
-        System.out.println("Topologisk søk");
+        System.out.println("Topologisk søk av L7g5");
+        //test.readGraphFromURL("http://www.iie.ntnu.no/fag/_alg/uv-graf/L7g5");
         test.readGraphFromURL("http://www.iie.ntnu.no/fag/_alg/uv-graf/L7g5");
         System.out.println("\n"+test.topoResult());
 
