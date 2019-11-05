@@ -32,6 +32,7 @@ class Automaton {
 
 
     public static void main(String[] args){
+        //Valid for all strings starting with 0 containing at most one 1.
         char[] inputAlphabet = {'0', '1'};
         int[][] pointers = {{1,2},{1,3},{2,2},{3,2}};
         State[] states = {
@@ -42,8 +43,9 @@ class Automaton {
         };
         String test = "01000";
         Automaton auto = new Automaton(inputAlphabet, states);
-        System.out.println(auto.checkInput(test.toCharArray(), states[0])+"\n\n\n");
+        System.out.println("Result of "+test+": "+auto.checkInput(test.toCharArray(), states[0])+"\n\n\n");
 
+        //Valid for all strings starting with ab or ba
         char[] inputAlphabet2 = {'a', 'b'};
         int[][] pointers2 = {{1,3},{4,2},{2,2},{2,4},{4,4}};
         State[] states2 = {
@@ -55,7 +57,7 @@ class Automaton {
         };
         String test2 = "aabb";
         Automaton auto2 = new Automaton(inputAlphabet2, states2);
-        System.out.println(auto2.checkInput(test2.toCharArray(), states2[0]));
+        System.out.println("Result of "+test2+": "+auto2.checkInput(test2.toCharArray(), states2[0]));
 
 
 
