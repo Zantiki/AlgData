@@ -1,20 +1,42 @@
 package Øving_11;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
 class Automaton {
 
     private char[] inputAlphabet;
     private State[] states;
+    private int[][] pointers;
 
-    public Automaton(char[] inputAlphabet, State[] states ){
+    public Automaton(char[] inputAlphabet, int[][] pointers, int[] acceptingStates ){
         this.inputAlphabet = inputAlphabet;
-        this.states = states;
+        this.pointers = pointers;
+        this.states = setStates(acceptingStates);
     }
 
-    public boolean checkInput(char[] input, State start){
-        State currentState = start;
+    private State[] setStates(int[] acceptingStates){
+        State[] states = new State[pointers.length];
+        for(int i = 0; i < states.length; i++){
+            states[i] = new State(i, pointers[i]);
+            for(int y = 0; y < acceptingStates.length; y++){
+                if(i == acceptingStates[y]){
+                    states[i] = new AcceptingState(i, pointers[i]);
+                    System.out.println(i+" is an accepting state");
+                }
+            }
+        }
+        return states;
+    }
+
+    public boolean checkInput(char[] input, int start){
+        State currentState = null;
+        try{
+            currentState = states[start];
+        }catch(Exception e){
+            System.out.println("Start does not exist in this automaton");
+            e.printStackTrace();
+            return false;
+        }
         for(int i = 0; i < input.length; i++){
             try {
                 int goTo = currentState.checkInput(input[i], inputAlphabet);
@@ -35,29 +57,18 @@ class Automaton {
         //Valid for all strings starting with 0 containing at most one 1.
         char[] inputAlphabet = {'0', '1'};
         int[][] pointers = {{1,2},{1,3},{2,2},{3,2}};
-        State[] states = {
-                new State(0, pointers[0]),
-                new State(1, pointers[1]),
-                new State(2, pointers[2]),
-                new AcceptingState(3, pointers[3])
-        };
+        int[] accept = {3};
         String test = "01000";
-        Automaton auto = new Automaton(inputAlphabet, states);
-        System.out.println("Result of "+test+": "+auto.checkInput(test.toCharArray(), states[0])+"\n\n\n");
+        Automaton auto = new Automaton(inputAlphabet, pointers, accept);
+        System.out.println("Result of "+test+": "+auto.checkInput(test.toCharArray(), 0)+"\n\n\n");
 
         //Valid for all strings starting with ab or ba
         char[] inputAlphabet2 = {'a', 'b'};
         int[][] pointers2 = {{1,3},{4,2},{2,2},{2,4},{4,4}};
-        State[] states2 = {
-                new State(0, pointers2[0]),
-                new State(1, pointers2[1]),
-                new AcceptingState(2, pointers2[2]),
-                new State(3, pointers2[3]),
-                new State(4, pointers2[4])
-        };
+        int[] accept2 = {2};
         String test2 = "aabb";
-        Automaton auto2 = new Automaton(inputAlphabet2, states2);
-        System.out.println("Result of "+test2+": "+auto2.checkInput(test2.toCharArray(), states2[0]));
+        Automaton auto2 = new Automaton(inputAlphabet2, pointers2, accept2);
+        System.out.println("Result of "+test2+": "+auto2.checkInput(test2.toCharArray(), 0));
 
 
 
