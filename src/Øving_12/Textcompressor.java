@@ -6,7 +6,7 @@ public class Textcompressor {
 
 
 
-    public byte[] readFromFile(String filename){
+    /*public byte[] readFromFile(String filename){
         try{
             DataInputStream file = new DataInputStream(
                     new BufferedInputStream(new FileInputStream(filename))
@@ -29,48 +29,60 @@ public class Textcompressor {
         }catch(Exception e){
             e.printStackTrace();
         }
-    }
+    }*/
 
 
     public String compress(String filename){
-        int bufferLength = 2000;
-        int dictionaryLength = 4000;
+        int bufferLength = 32;
+        int dictionaryLength = 64;
         int cursor = 0;
         byte[] dictionary = new byte[dictionaryLength];
         byte[] forwardBuffer = new byte[bufferLength];
         byte[] window = new byte[bufferLength+dictionaryLength+1];
 
         try{
-            DataInputStream stream = new DataInputStream(
+            DataInputStream in = new DataInputStream(
                     new BufferedInputStream(new FileInputStream(filename)));
-            CompressionKey next = new CompressionKey(0, 0, stream.readByte());
+            DataOutputStream out = new DataOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(filename+".unknown")));
+            //CompressionKey triple = new CompressionKey(0, 0, in.readByte());
 
-            while (!lookAheadEmpty(window, bufferLength, dictionaryLength)){
-                stream.readFully(window, cursor++, window.length);
+           // while (!lookAheadEmpty(window, bufferLength, dictionaryLength)){
+            while (in.available() > window.length){
+                System.out.println(in.available());
+
+                in.readFully(window, 0, window.length);
                 byte nextSymbol = window[window.length-1];
 
-                for(int i = 0; i < bufferLength; i++){
-                    dictionary[i] = window[i];
-                }
-                for(int i = bufferLength-1; i < dictionaryLength; i++){
-                    forwardBuffer[i] = window[i];
+                for(int i = 0; i < window.length-1; i++){
+                    if(i < dictionaryLength) {
+                        dictionary[i] = window[i];
+
+                    }else{
+                        forwardBuffer[i-dictionaryLength] = window[i];
+                    }
                 }
                 int[] result = largestSubStr(dictionary, forwardBuffer, dictionaryLength, bufferLength);
+                CompressionKey triple = new CompressionKey(result[0], result[1], nextSymbol);
+                System.out.println(triple.toString());
+                out.writeChars(triple.toString());
 
             }
 
+            in.close();
+            out.close();
         }catch(Exception e){
             e.printStackTrace();
             return null;
         }
 
-        String compressedName = filename+".zip";
+        String compressedName = filename+".unkown";
         return compressedName;
     }
 
     public boolean lookAheadEmpty(byte[] window, int bufferLength, int dictionaryLength){
         if( window[dictionaryLength-1] == 0){
-            return true;
+            return false;
         }else{
             return false;
         }
@@ -108,17 +120,64 @@ public class Textcompressor {
         return returnResult;
     }
 
-    public CompressionKey slideWindow( byte[] window, int cursor, DataInputStream stream, CompressionKey next) throws Exception{
+    /*public CompressionKey slideWindow( byte[] window, int cursor, DataInputStream stream, CompressionKey next) throws Exception{
         int sequencePosition = 0;
         int sequenceLength = 0;
         stream.readFully(window, cursor, window.length);
         next = new CompressionKey(0, cursor+sequencePosition, window[window.length-1]);
         return slideWindow(window, cursor, stream, next);
-    }
+    }*/
 
 
     public String decompress(String filename){
-        return "";
+        int bufferLength = 32;
+        int dictionaryLength = 64;
+        int cursor = 0;
+        byte[] dictionary = new byte[dictionaryLength];
+        byte[] forwardBuffer = new byte[bufferLength];
+        byte[] window = new byte[bufferLength+dictionaryLength+1];
+
+        try{
+            BufferedReader in = new BufferedReader(new FileReader(filename));
+            DataOutputStream out = new DataOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(filename.replaceFirst(".unkown",""))));
+            //CompressionKey triple = new CompressionKey(0, 0, in.readByte());
+            // while (!lookAheadEmpty(window, bufferLength, dictionaryLength)){
+            String line = "";
+
+            while(line != null){
+                line = in.readLine();
+                String[] values = line.split(";");
+                CompressionKey triple = new CompressionKey(Integer.parseInt(values[0]), Integer.parseInt(values[1]),Byte.parseByte(values[2]));
+                System.out.println(triple.toString());
+                if(triple.relPosition == 0){
+                    System.out.println(triple.next);
+                    out.writeByte(triple.next);
+                }else{
+
+                    for(int i = 0; i < triple.sequenceLength; i++){
+
+                    }
+
+                }
+
+
+            }
+
+            in.close();
+            out.close();
+        }catch(Exception e){
+            e.printStackTrace();
+            return null;
+        }
+
+        String compressedName = filename;
+        return compressedName;
+    }
+
+    public static void main(String[] args){
+        Textcompressor test = new Textcompressor();
+        System.out.println(test.compress("opg12.txt"));
     }
 }
 
@@ -133,5 +192,10 @@ class CompressionKey{
         this.next = next;
         this.relPosition = relPosition;
         this.sequenceLength = sequenceLength;
+    }
+
+    @Override
+    public String toString() {
+        return sequenceLength+";"+relPosition+";"+next;
     }
 }
