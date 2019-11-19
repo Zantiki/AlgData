@@ -1,6 +1,7 @@
 package Øving_13;
 
 
+import Øving_4.Lenke;
 import Øving_7.Edge;
 import Øving_7.GraphNode;
 import Øving_7.Previous;
@@ -11,13 +12,12 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.PriorityQueue;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class Mapper {
 
+    int nodesProcessed1 = 0;
+    int nodesProcessed2 = 0;
     int totNodes = 0;
     int totEdges = 0;
     MapNode[] nodes = null;
@@ -37,7 +37,7 @@ public class Mapper {
             }
         }
     }*/
-    public void aStar(MapNode start, MapNode end){
+    public MapNode aStar(MapNode start, MapNode end){
         initPrevious(start);
         boolean countNodes = true;
         int processCounter = 0;
@@ -54,14 +54,15 @@ public class Mapper {
                 //n.setLine(end.x, end.y);
                 //System.out.println(n.getLine());
                 if(n.equals(end)){
-                    System.out.println("Processcounter "+processCounter);
-                    printPath(n);
-                    return;
+                    nodesProcessed1 = processCounter;
+                    //printPath(n, "aStar");
+                    return end;
                 }
                 for(MapEdge e = n.edge1; e != null; e = e.next){
-                    e.to.setLine(end.x, end.y);
+                    //e.to.setLine(end.x, end.y);
                     PreviousEdge p = (PreviousEdge)e.to.d;
                     if(p.dist == p.infinity){
+                        e.to.setLine(end.x, end.y);
                         //e.to.setLine(end.x, end.y);
                         p.dist = ((PreviousEdge)n.d).dist + e.time;
                         //System.out.println(e.time);
@@ -75,16 +76,20 @@ public class Mapper {
                     //System.out.println(n.nodenr +"    "+e.to.nodenr+"        "+p.dist);
                 }
             }
-            System.out.println(processCounter);
-            printPath(end);
+            System.out.println("Antall noder behandlet: "+processCounter);
+            nodesProcessed1 = processCounter;
+            return end;
+            //printPath(end, "aStar");
 
         }catch(Exception e){
             e.printStackTrace();
+            nodesProcessed1 = processCounter;
+            return end;
         }
 
     }
 
-    public void djikstra(MapNode start, MapNode end){
+    public MapNode djikstra(MapNode start, MapNode end){
         initPrevious(start);
         boolean countNodes = true;
         int processCounter = 0;
@@ -97,9 +102,10 @@ public class Mapper {
             while(!q.isEmpty()){
                 MapNode n = (MapNode)q.poll();
                 if(n.equals(end)){
-                    System.out.println("Processcounter "+processCounter);
-                    printPath(n);
-                    return;
+                    //System.out.println("Processcounter "+processCounter);
+                    //printPath(n, "djikstra");
+                    nodesProcessed2 = processCounter;
+                    return end;
                 }
                 for(MapEdge e = n.edge1; e != null; e = e.next){
                     PreviousEdge p = (PreviousEdge)e.to.d;
@@ -114,26 +120,41 @@ public class Mapper {
                     //System.out.println(n.nodenr +"    "+e.to.nodenr+"        "+p.dist);
                 }
             }
-            System.out.println("Processcounter"+processCounter);
-            printPath(end);
+            //System.out.println("Processcounter"+processCounter);
+            //printPath(end, "djikstra");
+            nodesProcessed1 = processCounter;
+            return end;
 
         }catch(Exception e){
             e.printStackTrace();
+            nodesProcessed1 = processCounter;
+            return end;
         }
-
     }
 
-    public void printPath(MapNode end) throws Exception{
-        BufferedWriter writer = new BufferedWriter(new FileWriter("route.txt"));
-        MapNode n = end;
-        int traveltime = ((PreviousEdge)end.d).dist;
-        while(n != null){
-            PreviousEdge previous = (PreviousEdge)n.d;
-            writer.write(n.x+","+n.y+"\n");
-            n = previous.previous;
+    public void printPath(MapNode end, String algo) {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("route_" + algo + ".txt"));
+            MapNode n = end;
+            double traveltime = Math.round(((PreviousEdge) end.d).dist/100);
+            double temptime = 0;
+            String time = "";
+            int[] factors = {60*60, 60, 1};
+            for(int i = 0; i < factors.length; i++){
+                temptime = traveltime % factors[i];
+                time += Math.round((traveltime - temptime)/factors[i])+":";
+                traveltime = temptime;
+            }
+            while (n != null) {
+                PreviousEdge previous = (PreviousEdge) n.d;
+                writer.write(n.x + "," + n.y + "\n");
+                n = previous.previous;
+            }
+            writer.close();
+            System.out.println("Traveltime "+ time + " min");
+        }catch(Exception e){
+            e.printStackTrace();
         }
-        writer.close();
-        System.out.println("Traveltime "+(traveltime/(100*60*60)));
     }
 
     public String bfsResultModifed(MapNode start, MapNode end) {
@@ -157,13 +178,6 @@ public class Mapper {
         }
     }
 
-    public void aStar(String url){
-
-    }
-
-    private String writePath(){
-        return null;
-    }
 
     public void readGraphFromURL(String nodeLoc, String edgeLoc){
         try {
@@ -198,7 +212,7 @@ public class Mapper {
                 nodes[from].edge1 = edge;
                 //System.out.println("An edge from "+from+" to "+to+" has been added");
             }
-            System.out.println(totEdges+" Edges added");
+            System.out.println(totEdges+" Edges added\n");
             reader.close();
 
         }catch(Exception e){
@@ -209,6 +223,7 @@ public class Mapper {
     public void initPrevious(MapNode node){ ;
         for(int i = totNodes; i -- >0;) {
             nodes[i].d = new PreviousEdge();
+            nodes[i].relDistance = 0;
         }
         ((PreviousEdge)node.d).dist = 0;
     }
@@ -217,14 +232,36 @@ public class Mapper {
         String nodeLoc = "http://www.iie.ntnu.no/fag/_alg/Astjerne/opg/norden/noder.txt";
         String edgeLoc = "http://www.iie.ntnu.no/fag/_alg/Astjerne/opg/norden/kanter.txt";
         Mapper test = new Mapper(nodeLoc, edgeLoc);
-        //Rekjavik til melar
-        test.djikstra(test.nodes[2787385], test.nodes[765228]);
-        System.out.println("Djikstra: "+test.bfsResultModifed(test.nodes[2419175], test.nodes[5177564]));
-        //test = new Mapper(nodeLoc, edgeLoc);
-        test.aStar(test.nodes[2787385], test.nodes[765228]);
-        System.out.println("A*: "+test.bfsResultModifed(test.nodes[2787385], test.nodes[765228]));
-        /*test.bfsModified(test.nodes[0], test.nodes[1]);
-        System.out.println(test.bfsResultModifed(test.nodes[0], test.nodes[1]));*/
+        //Bodø til københavn
+        int runder = 0;
+        MapNode end;
+        double tid;
+        Date slutt;
+        Date start = new Date();
+        do {
+            end = test.djikstra(test.nodes[5709083], test.nodes[5108028]);
+            slutt = new Date();
+            runder++;
+        } while (slutt.getTime() - start.getTime() < 10000);
+        tid = (double) (slutt.getTime() - start.getTime()) / runder;
+        System.out.println("Rute Kårvåg-Hjemnes");
+        System.out.println(test.nodesProcessed2+" Noder passert, Millisekund pr. runde djikstra: " + tid);
+        //System.out.println("Djikstra: "+test.bfsResultModifed(test.nodes[2787385], test.nodes[765228]));
+        test.printPath(end, "djikstra");
+        runder = 0;
+        System.out.println("\n A*");
+        start = new Date();
+        do {
+            end = test.aStar(test.nodes[5709083], test.nodes[5108028]);
+            slutt = new Date();
+            runder++;
+        } while (slutt.getTime() - start.getTime() < 10000);
+        tid = (double) (slutt.getTime() - start.getTime()) / runder;
+        System.out.println("Rute Kårvåg-Hjemnes");
+        System.out.println(test.nodesProcessed1+" Noder passert, Millisekund pr. runde A*: " + tid);
+        test.printPath(end, "aStar");
+        //System.out.println("A*: "+test.bfsResultModifed(test.nodes[2787385], test.nodes[765228]));
+
     }
 }
 
@@ -254,7 +291,7 @@ class MapNode{
         //System.out.println(x1);
         double x2 = Math.toRadians(this.x);
         double y2 = Math.toRadians(this.y);
-        this.relDistance = Math.round(2*r*Math.asin(Math.sqrt(Math.pow(Math.sin((x1-x2)*0.5), 2) +Math.cos(x2)*Math.cos(x1)
+        relDistance = Math.round(2*r*Math.asin(Math.sqrt(Math.pow(Math.sin((x1-x2)*0.5), 2) +Math.cos(x2)*Math.cos(x1)
                 *Math.pow(Math.sin((y1-y2)*0.5), 2))));
     }
 
