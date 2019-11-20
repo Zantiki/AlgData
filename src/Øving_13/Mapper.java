@@ -50,6 +50,7 @@ public class Mapper {
 
             while(!q.isEmpty()){
                 MapNode n = (MapNode)q.poll();
+                processCounter++;
                // n.setLine(end.x, end.y);
                 //n.setLine(end.x, end.y);
                 //System.out.println(n.getLine());
@@ -59,19 +60,18 @@ public class Mapper {
                     return end;
                 }
                 for(MapEdge e = n.edge1; e != null; e = e.next){
-                    //e.to.setLine(end.x, end.y);
+                    e.to.setLine(end.x, end.y);
                     PreviousEdge p = (PreviousEdge)e.to.d;
                     if(p.dist == p.infinity){
                         e.to.setLine(end.x, end.y);
                         //e.to.setLine(end.x, end.y);
-                        p.dist = ((PreviousEdge)n.d).dist + e.time;
+                        p.dist = ((PreviousEdge) n.d).dist + e.time;
                         //System.out.println(e.time);
                         //n.setLine(end.x, end.y);
                         p.previous = n;
                        // n.setLine(end.x, end.y);
                         // System.out.println(n.nr+". "+"X: "+n.x+" Y: "+ n.y);
                         q.add(e.to);
-                        processCounter++;
                     }
                     //System.out.println(n.nodenr +"    "+e.to.nodenr+"        "+p.dist);
                 }
@@ -101,6 +101,7 @@ public class Mapper {
 
             while(!q.isEmpty()){
                 MapNode n = (MapNode)q.poll();
+                processCounter++;
                 if(n.equals(end)){
                     //System.out.println("Processcounter "+processCounter);
                     //printPath(n, "djikstra");
@@ -115,7 +116,6 @@ public class Mapper {
                         p.previous = n;
                        // System.out.println(n.nr+". "+"X: "+n.x+" Y: "+ n.y);
                         q.add(e.to);
-                        processCounter++;
                     }
                     //System.out.println(n.nodenr +"    "+e.to.nodenr+"        "+p.dist);
                 }
@@ -136,18 +136,20 @@ public class Mapper {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter("route_" + algo + ".txt"));
             MapNode n = end;
-            double traveltime = Math.round(((PreviousEdge) end.d).dist/100);
-            double temptime = 0;
+            int traveltime = (int)((PreviousEdge) end.d).dist/100;
+
+            int temptime = 0;
             String time = "";
             int[] factors = {60*60, 60, 1};
+            System.out.println(traveltime);
             for(int i = 0; i < factors.length; i++){
                 temptime = traveltime % factors[i];
-                time += Math.round((traveltime - temptime)/factors[i])+":";
+                time += ((int)(traveltime - temptime)/factors[i]) +":";
                 traveltime = temptime;
             }
             while (n != null) {
                 PreviousEdge previous = (PreviousEdge) n.d;
-                writer.write(n.x + "," + n.y + "\n");
+                writer.write(n.x + ", " + n.y + "\n");
                 n = previous.previous;
             }
             writer.close();
@@ -232,6 +234,8 @@ public class Mapper {
         String nodeLoc = "http://www.iie.ntnu.no/fag/_alg/Astjerne/opg/norden/noder.txt";
         String edgeLoc = "http://www.iie.ntnu.no/fag/_alg/Astjerne/opg/norden/kanter.txt";
         Mapper test = new Mapper(nodeLoc, edgeLoc);
+        int to = 5108028;
+        int from = 5709083;
         //Bodø til københavn
         int runder = 0;
         MapNode end;
@@ -239,26 +243,26 @@ public class Mapper {
         Date slutt;
         Date start = new Date();
         do {
-            end = test.djikstra(test.nodes[5709083], test.nodes[5108028]);
+            end = test.djikstra(test.nodes[5108028], test.nodes[5709083]);
             slutt = new Date();
             runder++;
         } while (slutt.getTime() - start.getTime() < 10000);
         tid = (double) (slutt.getTime() - start.getTime()) / runder;
         System.out.println("Rute Kårvåg-Hjemnes");
-        System.out.println(test.nodesProcessed2+" Noder passert, Millisekund pr. runde djikstra: " + tid);
+        System.out.println(test.nodesProcessed2+" Noder behandlet, Millisekund pr. runde djikstra: " + tid);
         //System.out.println("Djikstra: "+test.bfsResultModifed(test.nodes[2787385], test.nodes[765228]));
         test.printPath(end, "djikstra");
         runder = 0;
         System.out.println("\n A*");
         start = new Date();
         do {
-            end = test.aStar(test.nodes[5709083], test.nodes[5108028]);
+            end = test.aStar(test.nodes[5108028], test.nodes[5709083]);
             slutt = new Date();
             runder++;
         } while (slutt.getTime() - start.getTime() < 10000);
         tid = (double) (slutt.getTime() - start.getTime()) / runder;
         System.out.println("Rute Kårvåg-Hjemnes");
-        System.out.println(test.nodesProcessed1+" Noder passert, Millisekund pr. runde A*: " + tid);
+        System.out.println(test.nodesProcessed1+" Noder behandlet, Millisekund pr. runde A*: " + tid);
         test.printPath(end, "aStar");
         //System.out.println("A*: "+test.bfsResultModifed(test.nodes[2787385], test.nodes[765228]));
 
@@ -285,15 +289,24 @@ class MapNode{
     }
 
     public void setLine(double x1, double y1){
-        double r = 6371 * 1000;
+        double r = 35285538.46153846153846153846;
         x1 = Math.toRadians(x1);
         y1 = Math.toRadians(y1);
         //System.out.println(x1);
         double x2 = Math.toRadians(this.x);
         double y2 = Math.toRadians(this.y);
-        relDistance = Math.round(2*r*Math.asin(Math.sqrt(Math.pow(Math.sin((x1-x2)*0.5), 2) +Math.cos(x2)*Math.cos(x1)
+        relDistance = (int)(r*Math.asin(Math.sqrt(Math.pow(Math.sin((x1-x2)*0.5), 2) +Math.cos(x2)*Math.cos(x1)
                 *Math.pow(Math.sin((y1-y2)*0.5), 2))));
     }
+
+   /* int setLine (MapNode n1, MapNode n2) {
+        double sin_bredde = Math.sin((n1.x-n2.x)/2.0);
+        double sin_lengde = Math.sin((n1.y-n2.y)/2.0);
+        return (int) (35285538.46153846153846153846*Math.asin(Math.sqrt(
+                sin_bredde*sin_bredde+n1.cos_bredde*n2.cos_bredde*sin_lengde*sin_lengde)));
+    }*/
+
+
 
     public double getLine(){
         //System.out.println(relDistance);
